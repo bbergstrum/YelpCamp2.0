@@ -1,7 +1,9 @@
 const express = require('express');
 const path = require('path');
 const dotenv = require('dotenv').config()
+const morgan = require('morgan') // http request logger
 const mongoose = require('mongoose');
+const ejsMate = require('ejs-mate'); // an ejs engine
 const methodOverride = require('method-override'); // override HTTP verbs
 const cities = require('./seeds/cities');
 const {places, descriptors} = require('./seeds/camplocations');
@@ -52,9 +54,10 @@ const seedDB = async () => {
 // });
 
 const app = express();
-
+app.use(morgan('tiny'));
+app.engine('ejs', ejsMate); // use ejsmate instead of default ejs engine
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, 'views')); // joining absolute paths
 
 app.use(express.urlencoded({ extended: true}));
 app.use(methodOverride('_method'));
