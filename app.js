@@ -4,7 +4,9 @@ const dotenv = require('dotenv').config()
 const morgan = require('morgan') // http request logger
 const mongoose = require('mongoose');
 const ejsMate = require('ejs-mate'); // an ejs engine
+const { campgroundSchema } = require('./schemaValidations');
 const catchAsync = require('./utilities/catchAsync') // async catch wrapper
+const ExpressError = require('./utilities/ExpressError'); // express error class
 const methodOverride = require('method-override'); // override HTTP verbs
 const cities = require('./seeds/cities');
 const {places, descriptors} = require('./seeds/camplocations');
@@ -69,6 +71,18 @@ app.set('views', path.join(__dirname, 'views')); // joining absolute paths
 app.use(express.urlencoded({ extended: true}));
 app.use(methodOverride('_method'));
 
+const validateCampground = (req, res, next) => {
+
+    // throw an error if the campground object and its keys failed validation
+    const { error } = campgroundSchema.validate(req.body);
+    if(error){
+        const errorMessage = error.details.map( element => element.message).join(',');
+        throw new ExpressError(errorMessage, 400);
+    } else {
+        next();
+    }
+};
+
 app.get('/', (req, res) => {
     res.render('home');
 });
@@ -82,7 +96,7 @@ app.get('/campgrounds/new', (req, res) => {
     res.render('campgrounds/new');
 });
 
-app.post('/campgrounds', catchAsync( async (req, res, next) => {
+app.post('/campgrounds', validateCampground, catchAsync( async (req, res, next) => {
         const newCampground = new Campground(req.body.campground);
         await newCampground.save();
         res.redirect(`/campgrounds/${newCampground._id}`);
@@ -93,12 +107,12 @@ app.get('/campgrounds/:id', catchAsync( async (req, res) => {
     res.render('campgrounds/show', { campground });
 }));
 
-app.get('/campgrounds/:id/edit', async (req, res) => {
+app.get('/campgrounds/:id/edit', catchAsync( async (req, res) => {
     const campground = await Campground.findById(req.params.id);
     res.render('campgrounds/edit', { campground });
-});
+}));
 
-app.put('/campgrounds/:id', catchAsync( async (req, res) => {
+app.put('/campgrounds/:id', validateCampground, catchAsync( async (req, res) => {
     const { id } = req.params;
     // spread the campground object to the campground schema
     const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground}); 
@@ -111,10 +125,15 @@ app.delete('/campgrounds/:id', catchAsync( async (req, res) => {
     res.redirect('/campgrounds');
 }));
 
+app.all('*', (req, res, next) => {
+    next(new ExpressError('Page Not Found', 404));
+});
 
 // basic error handler
 app.use((err, req, res, next) => {
-    res.send("Error: Something went wrong!");
+    const { statusCode = 500, message } = err;
+    if(!err.message) err.message = 'Something Went Wrong...';
+    res.status(statusCode).render('./partials/error', { err });
 });
 
 // serve on port 3000
