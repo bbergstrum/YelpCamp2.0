@@ -37,11 +37,16 @@ const seedDB = async () => {
     {
         // generate random number for cities index
         const random = Math.floor(Math.random() * 1000);
+        const price = Math.floor(Math.random() * 20) + 10;
         const campground = new Campground({
             // generate a random city destination
             location: `${cities[random].city}, ${cities[random].state}`,
             // generate a random sample campground from camplocations.js
-            title: `${sampleLocation(descriptors)} ${sampleLocation(places)}`
+            title: `${sampleLocation(descriptors)} ${sampleLocation(places)}`,
+            // generate a random image from the woods unsplash collection
+            image: 'https://source.unsplash.com/collection/483251',
+            description: 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nihil distinctio assumenda praesentium nostrum cum quia nam non voluptatem quae! Placeat, perspiciatis animi incidunt nulla natus perferendis illum omnis sit adipisci.',
+            price
         });
         await campground.save();
     }
@@ -54,6 +59,7 @@ const seedDB = async () => {
 // });
 
 const app = express();
+
 app.use(morgan('tiny'));
 app.engine('ejs', ejsMate); // use ejsmate instead of default ejs engine
 app.set('view engine', 'ejs');
