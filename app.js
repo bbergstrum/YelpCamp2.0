@@ -4,13 +4,14 @@ const dotenv = require('dotenv').config()
 const morgan = require('morgan') // http request logger
 const mongoose = require('mongoose');
 const ejsMate = require('ejs-mate'); // an ejs engine
-const { campgroundSchema } = require('./schemaValidations');
+const { campgroundSchema, reviewSchema } = require('./schemaValidations');
 const catchAsync = require('./utilities/catchAsync') // async catch wrapper
 const ExpressError = require('./utilities/ExpressError'); // express error class
 const methodOverride = require('method-override'); // override HTTP verbs
 const cities = require('./seeds/cities');
 const {places, descriptors} = require('./seeds/camplocations');
 const Campground = require('./models/campground');
+const Review = require('./models/review');
 
 // connect to mongodb with connection string
 const mongo_connection_string = `mongodb+srv://${process.env.MONGO_DB_USER}:${process.env.MONGO_DB_PASSWORD}@cluster0.jinak.mongodb.net/${process.env.MONGO_DB_NAME}?retryWrites=true&w=majority`
@@ -72,9 +73,19 @@ app.use(express.urlencoded({ extended: true}));
 app.use(methodOverride('_method'));
 
 const validateCampground = (req, res, next) => {
-
     // throw an error if the campground object and its keys failed validation
     const { error } = campgroundSchema.validate(req.body);
+    if(error){
+        const errorMessage = error.details.map( element => element.message).join(',');
+        throw new ExpressError(errorMessage, 400);
+    } else {
+        next();
+    }
+};
+
+const validateReview = (req, res, next) => {
+     // throw an error if the review object and its keys failed validation
+    const { error } = reviewSchema.validate(req.body);
     if(error){
         const errorMessage = error.details.map( element => element.message).join(',');
         throw new ExpressError(errorMessage, 400);
@@ -123,6 +134,15 @@ app.delete('/campgrounds/:id', catchAsync( async (req, res) => {
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
     res.redirect('/campgrounds');
+}));
+
+app.post('/campgrounds/:id/reviews', validateReview, catchAsync( async (req, res) => {
+    const campground = await Campground.findById(req.params.id);
+    const review = new Review(req.body.review);
+    campground.reviews.push(review);
+    await review.save();
+    await campground.save();
+    res.redirect(`/campgrounds/${ campground._id }`);
 }));
 
 app.all('*', (req, res, next) => {
