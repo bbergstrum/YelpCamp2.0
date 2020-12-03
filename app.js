@@ -23,7 +23,8 @@ mongoose.connect(mongo_connection_string, {
     // with required params
     useNewUrlParser: true,
     useCreateIndex: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useFindAndModify: false
 });
 
 // shorten mongoose.connection
@@ -75,6 +76,7 @@ app.set('views', path.join(__dirname, 'views')); // joining absolute paths
 
 app.use(express.urlencoded({ extended: true}));
 app.use(methodOverride('_method'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // using routes
 app.use('/campgrounds', campgrounds)

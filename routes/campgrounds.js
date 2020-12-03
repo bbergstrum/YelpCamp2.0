@@ -5,7 +5,7 @@ const ExpressError = require('../utilities/ExpressError'); // express error clas
 const Campground = require('../models/campground');
 const { campgroundSchema} = require('../schemaValidations'); // Joi schema
 
-
+// campground validation middleware
 const validateCampground = (req, res, next) => {
     // throw an error if the campground object and its keys failed validation
     const { error } = campgroundSchema.validate(req.body);
