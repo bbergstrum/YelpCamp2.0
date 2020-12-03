@@ -30,21 +30,30 @@ router.get('/new', (req, res) => {
 
 // post campgrounds
 router.post('/', validateCampground, catchAsync( async (req, res, next) => {
-        const newCampground = new Campground(req.body.campground);
-        await newCampground.save();
-        res.redirect(`/campgrounds/${newCampground._id}`);
+    const newCampground = new Campground(req.body.campground);
+    await newCampground.save();
+    req.flash('success', 'Campground Created Successfully.');
+    res.redirect(`/campgrounds/${newCampground._id}`);
 }));
 
 // show campground
 router.get('/:id', catchAsync( async (req, res) => {
     // find campground by id and populate it with its corresponding reviews
     const campground = await Campground.findById(req.params.id).populate('reviews');
+    if(!campground){
+        req.flash('error', 'Campground Not Found.');
+        return res.redirect('/campgrounds');
+    }
     res.render('campgrounds/show', { campground });
 }));
 
 // edit campground
 router.get('/:id/edit', catchAsync( async (req, res) => {
     const campground = await Campground.findById(req.params.id);
+    if(!campground){
+        req.flash('error', 'Campground Not Found.');
+        return res.redirect('/campgrounds');
+    }
     res.render('campgrounds/edit', { campground });
 }));
 
@@ -53,6 +62,7 @@ router.put('/:id', validateCampground, catchAsync( async (req, res) => {
     const { id } = req.params;
     // spread the campground object to the campground schema
     const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground}); 
+    req.flash('success', 'Successfully Updated Campground.');
     res.redirect(`/campgrounds/${campground._id}`);
 }));
 
@@ -60,6 +70,7 @@ router.put('/:id', validateCampground, catchAsync( async (req, res) => {
 router.delete('/:id', catchAsync( async (req, res) => {
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
+    req.flash('success', 'Campground Deleted Successfully.');
     res.redirect('/campgrounds');
 }));
 
