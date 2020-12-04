@@ -8,13 +8,15 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const ExpressError = require('./utilities/ExpressError'); // express error class
 const methodOverride = require('method-override'); // override HTTP verbs
-
-const Campground = require('./models/campground');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const User = require('./models/user');
 
 // express routes
+const users = require('./routes/users');
 const campgrounds = require('./routes/campgrounds');
 const reviews = require('./routes/reviews');
-const { date } = require('joi');
+
 
 // connect to mongodb with connection string
 const mongo_connection_string = `mongodb+srv://${process.env.MONGO_DB_USER}:${process.env.MONGO_DB_PASSWORD}@cluster0.jinak.mongodb.net/${process.env.MONGO_DB_NAME}?retryWrites=true&w=majority`
@@ -59,6 +61,13 @@ const sessionConfig = {
 app.use(session(sessionConfig));
 app.use(flash());
 
+app.use(passport.initialize()); 
+app.use(passport.session()); // passport middleware for persistant logins
+passport.use(new LocalStrategy(User.authenticate())); // static method added onto schema
+
+passport.serializeUser(User.serializeUser()); // storing user in session
+passport.deserializeUser(User.deserializeUser()); // remove user after session
+
 // flash access to templates with flash middleware
 app.use((req, res, next) => {
     res.locals.success = req.flash('success');
@@ -66,7 +75,16 @@ app.use((req, res, next) => {
     next();
 });
 
-// using routes
+// generate a test user
+app.get('/testUser', async (req, res) => {
+    const newTestUser = new User({ email: 'TestUser@gmail.com', username: 'TestUserPerson'});
+    const registerUser = await User.register(newTestUser, 'Test123');
+    res.send(registerUser);
+});
+
+
+// use express routes
+app.use('/', users)
 app.use('/campgrounds', campgrounds)
 app.use('/campgrounds/:id/reviews', reviews)
 
