@@ -5,6 +5,7 @@ const ExpressError = require('../utilities/ExpressError'); // express error clas
 const Campground = require('../models/campground');
 const { campgroundSchema} = require('../schemaValidations'); // Joi schema
 const { isLoggedIn } = require('../middleware');
+const campground = require('../models/campground');
 
 // campground validation middleware
 const validateCampground = (req, res, next) => {
@@ -32,6 +33,7 @@ router.get('/new', isLoggedIn, (req, res) => {
 // post campgrounds
 router.post('/', isLoggedIn, validateCampground, catchAsync( async (req, res, next) => {
     const newCampground = new Campground(req.body.campground);
+    newCampground.author = req.user._id;
     await newCampground.save();
     req.flash('success', 'Campground Created Successfully.');
     res.redirect(`/campgrounds/${newCampground._id}`);
@@ -40,7 +42,7 @@ router.post('/', isLoggedIn, validateCampground, catchAsync( async (req, res, ne
 // show campground
 router.get('/:id', catchAsync( async (req, res) => {
     // find campground by id and populate it with its corresponding reviews
-    const campground = await Campground.findById(req.params.id).populate('reviews');
+    const campground = await Campground.findById(req.params.id).populate('reviews').populate('author');
     if(!campground){
         req.flash('error', 'Campground Not Found.');
         return res.redirect('/campgrounds');

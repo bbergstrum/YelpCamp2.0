@@ -8,9 +8,12 @@ const CampgroundSchema = new Schema({
     price: Number,
     description: String,
     location: String,
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
     reviews: [
         {
-            // object id from a review model
             type: Schema.Types.ObjectId,
             ref: 'Review'
         }
@@ -18,14 +21,13 @@ const CampgroundSchema = new Schema({
 });
 
 CampgroundSchema.post('findOneAndDelete', async function (doc){
-    if(doc){
-        await Review.remove({
+    if (doc) {
+        await Review.deleteMany({
             // the id for each review is found somewhere IN doc.reviews
             _id: {
                 $in: doc.reviews // delete all reviews where their id is in the deleted document reviews array
             }
-        });
+        })
     }
 });
-
 module.exports = mongoose.model('Campground', CampgroundSchema);
