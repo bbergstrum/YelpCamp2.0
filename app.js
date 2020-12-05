@@ -70,6 +70,7 @@ passport.deserializeUser(User.deserializeUser()); // remove user after session
 
 // flash access to templates with flash middleware
 app.use((req, res, next) => {
+    res.locals.currentUser = req.user; // provide the current user to all templates
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
