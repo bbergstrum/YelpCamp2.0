@@ -2,7 +2,7 @@
 <div class="row">
     <div class="col-6 offset-3">
         <h1>Edit Campground</h1>
-        <form action="/campgrounds/<%= campground._id %>?_method=PUT" method="POST" novalidate class="formValidation">
+        <form action="/campgrounds/<%= campground._id %>?_method=PUT" method="POST" novalidate class="formValidation" enctype="multipart/form-data">
             <div class="mb-3">
                 <label class="form-label" for="title">Title</label>
                 <input class="form-control" type="text" id="title" name="campground[title]"
@@ -15,14 +15,6 @@
                 <label class="form-label" for="location">Location</label>
                 <input class="form-control" type="text" id="location" name="campground[location]"
                     value="<%= campground.location %>" required>
-                <div class="valid-feedback">
-                    Looks good!
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label" for="image">Image URL</label>
-                <input class="form-control" type="text" id="image" name="campground[image]"
-                    value="<%= campground.image %>" required>
                 <div class="valid-feedback">
                     Looks good!
                 </div>
@@ -45,6 +37,15 @@
                 <textarea class="form-control" type="text" id="description" name="campground[description]" required><%= campground.description %></textarea>
                 <div class="valid-feedback">
                     Looks good!
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="form-file custom-file">
+                    <input type="file" class="form-file-input" id="image" name="image" multiple>
+                    <label class="form-file-label" for="image">
+                        <span class="form-file-text custom-file-label">Add more image(s)...</span>
+                        <span class="form-file-button">Browse</span>
+                    </label>
                 </div>
             </div>
             <div class="mb-3">

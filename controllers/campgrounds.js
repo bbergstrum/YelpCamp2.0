@@ -48,7 +48,10 @@ module.exports.editCampground = async (req, res) => {
 module.exports.updateCampground = async (req, res) => {
     const { id } = req.params;
     // spread the campground object to the campground schema
-    const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground}); 
+    const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground});
+    const images = req.files.map(file => ({ url: file.path, filename: file.filename }))
+    campground.images.push(...images); // spread new images onto existing images array
+    await campground.save();
     req.flash('success', 'Successfully Updated Campground.');
     res.redirect(`/campgrounds/${campground._id}`);
 }
