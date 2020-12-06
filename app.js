@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
-const dotenv = require('dotenv').config()
-const morgan = require('morgan') // http request logger
+const dotenv = require('dotenv').config();
+const morgan = require('morgan'); // http request logger
 const mongoose = require('mongoose');
 const ejsMate = require('ejs-mate'); // an ejs engine
 const session = require('express-session');
